@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Two player</title>
+	<link rel="stylesheet" href="../css/w3.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+	<style>
+		canvas{
+			position: absolute;
+			margin: auto;
+			top:0;
+			bottom:0;
+			left:0;
+			right:0;
+		}
+		body, h1,h2,h3,h4,h5,h6{font-family: "Montserrat", sans-serif}
+    .w3-row-padding img {margin-bottom: 12px}
+    /* Set the width of the sidenav to 120px */
+    .w3-sidenav {width: 120px;background: #222;}
+    /* Add a left margin to the "page content" that matches the width of the sidenav (120px) */
+    #main {margin-left: 120px}
+    /* Remove margins from "page content" on small screens */
+    @media only screen and (max-width: 600px) {#main {margin-left: 0}}
+
+	</style>
+</head>
+<body class="w3-black">
+	<nav class="w3-sidenav w3-center w3-small w3-hide-small">
+		<!-- Avatar image in top left corner -->
+		<img src="../img/fcode.jpg" style="width:100%">
+		<a class="w3-padding-large w3-hover-black" href="1player.html">
+			<i class="fa  fa-american-sign-language-interpreting w3-xxlarge"></i>
+			<p>1 Player</p>
+		</a>
+		<a class="w3-padding-large w3-hover-black" href="../gameHome.html">
+
+				<i class="fa fa-home w3-xxlarge"></i>
+			<p>HOME</p>
+		</a>
+
+		<a class="w3-padding-large w3-hover-black" href="playGame.html">
+			<i class="fa fa-backward  w3-xxlarge"></i>
+			<p>BACK</p>
+		</a>
+	</nav>
+<script>
+
+	var WIDTH=700, HEIGHT=600, pi=Math.PI;
+	var UpArrow=38, DownArrow = 40, WArrow= 87, SArrow = 83;
+	var canvas, ctx, keystate;
+	var player, player2, ball;
+
+	player2 ={
+		x:null,
+		y:null,
+		width: 20,
+		height: 100,
+
+		update:function(){
+			if (keystate[UpArrow]) this.y -=15;
+			if (keystate[DownArrow]) this.y +=15;
+		},
+		draw: function() {
+			ctx.fillRect(this.x, this.y, this.width , this.height);
+		}
+	};
+	player ={
+		x:null,
+		y:null,
+		width: 20,
+		height: 100,
+
+		update:function(){
+			if (keystate[WArrow]) this.y -=15;
+			if (keystate[SArrow]) this.y +=15;
+		},
+		draw: function() {
+			ctx.fillRect(this.x, this.y, this.width , this.height);
+		}
+	};
+	ball ={
+		x:null,
+		y:null,
+		vel:null,
+		side: 20,
+		speed: 15,
+
+
+		update:function(){
+			this.x += this.vel.x;
+			this.y += this.vel.y;
+
+			if (this.x + 10<0) {
+				alert("Player 1 Win ^^!");
+				window.cancelAnimationFrame(loop, canvas);
+				//console.log("Game Over");
+			}
+			if (this.x + 10> WIDTH) {
+					alert("Player 2 Win -_- ");
+					window.cancelAnimationFrame(loop, canvas);
+			}
+
+			if (0 > this.y || this.y+this.side > HEIGHT){
+				var offset = this.vel.y < 0 ? 0 - this.y : HEIGHT - (this.y + this.side);
+				this.y+= 2*offset;
+				this.vel.y*=-1;
+			}
+			var AABBIntersect = function(ax, ay, aw, ah, bx, by, bw, bh){
+				return ax < bx+bw && ay < by+bh && bx < ax+aw  && by < ay+ah;
+			};
+
+			var pdle = this.vel.x < 0 ? player : player2;
+			if (AABBIntersect(pdle.x, pdle.y, pdle.width, pdle.height, this.x, this.y, this.side, this.side)
+			) {
+				this.x = pdle===player ? player.x+player.width : player2.x - this.side;
+				var n = (this.y+this.side-pdle.y)/(pdle.height+this.side);
+				var phi = 0.25*pi*(2*n-1);
+				this.vel.x = (pdle === player ? 1 : -1)*this.speed*Math.cos(phi);
+				this.vel.y = this.speed*Math.sin(phi);
+			}
+		},
+		draw: function() {
+			ctx.fillRect(this.x, this.y, this.side , this.side);
+		}
+	};
+
+	function main(){
+		canvas = document.createElement("canvas");
+		canvas.width = WIDTH;
+		canvas.height = HEIGHT;
+		ctx = canvas.getContext("2d");
+		document.body.appendChild(canvas);
+
+		keystate = {};
+		document.addEventListener("keydown",function(e){
+			keystate[e.keyCode] = true;
+		});
+
+		document.addEventListener("keyup", function(e){
+			delete keystate[e.keyCode];
+		});
+
+		init();
+
+		var loop = function() {
+			update();
+			draw();
+
+			window.requestAnimationFrame(loop, canvas);
+
+		};
+		window.requestAnimationFrame(loop, canvas);
+
+	}
+
+	function init(){
+		player.x = player.width;
+		player.y = (HEIGHT - player.height)/2;
+
+		player2.x = WIDTH - (player.width + player2.width);
+		player2.y = (HEIGHT - player2.height)/2;
+
+		ball.x = (WIDTH - ball.side)/2;
+		ball.y = (HEIGHT - ball.side)/2;
+
+		ball.vel = {
+			x: ball.speed,
+			y: 0,
+		}
+	}
+
+	function update() {
+		ball.update();
+		player.update();
+		player2.update();
+	}
+
+	function draw() {
+		ctx.fillRect(0,0, WIDTH, HEIGHT);
+ 		ctx.save();
+ 		ctx.fillStyle = "#fff";
+
+
+		ball.draw();
+		player.draw();
+		player2.draw();
+
+ 		var w = 4;
+ 		var x = (WIDTH - w)*0.5;
+ 		var y = 0;
+ 		var step = HEIGHT/20;
+ 		while (y < HEIGHT){
+ 			ctx.fillRect(x, y+step*0.25, w, step*0.5);
+ 			y += step;
+ 		}
+
+		ctx.restore();
+	}
+
+	main();
+
+</script>
+</body>
+</html>

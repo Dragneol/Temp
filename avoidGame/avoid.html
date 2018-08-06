@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Avoid Game</title>
+    <style>
+      body{
+        text-align: center;
+      }
+      canvas{
+        margin:auto;
+        top:0;
+        bottom:0;
+        left:0;
+        right:0;
+        background-color: #eee;
+      }
+    </style>
+    <script>
+        // DECLARATION
+        var ball = new Array();
+        // x location of target, y location of target
+        ball[0] = new Ball(150, 150);
+        ball[1] = new Ball(230, 350);
+        ball[2] = new Ball(470, 350);
+        ball[3] = new Ball(320, 250);
+        ball[4] = new Ball(440, 190);
+        ball[5] = new Ball(100, 350);
+        ball[6] = new Ball(80, 120);
+        ball[7] = new Ball(130, 240);
+        ball[8] = new Ball(50,50);
+        ball[9] = new Ball(400,190);
+        ball[10] = new Ball(230,120);
+        ball[11] = new Ball(50,400);
+        ball[12] = new Ball(100,300);
+ 
+        var player = new Player();
+        var score;
+
+        // PLAYER OBJECT
+        function Player(){
+          // Properties
+          var x = 10 ;
+          var y = 10;
+          var playerColor = "red";
+          var width = 25;
+          var height = 25;
+          var speed = 10;
+
+          // Method
+          this.draw = draw;
+          function draw(){
+            graph.beginPath();
+            graph.fillStyle = playerColor;
+            graph.fillRect(x,y,width,height);
+            this.isHit();
+            // Check Hit
+
+          }
+          this.setX = setX;
+          function setX(newX){
+           x = newX;
+          }
+          this.setY = setY;
+          function setY(newY){
+            y = newY;
+          }
+          this.getSpeed = getSpeed;
+          function getSpeed(){
+            return speed;
+          }
+          this.getX = getX;
+          function getX() {
+            return x;
+          }
+          this.getY = getY;
+          function getY() {
+            return y;
+          }
+          this.getW = getW;
+          function getW(){
+            return width;
+          }
+          this.getH = getH;
+          function getH() {
+            return height;
+          }
+          this.isHit = isHit;
+          // Check Hit by ball --> Game Over
+          function isHit(){
+            for (var i=0; i<ball.length; i++){
+              if ((x + width >= ball[i].getX()) && (x + width <= (ball[i].getX() + ball[i].getRadius()*2))
+              && (y + height >= ball[i].getY()) && (y + height <= (ball[i].getY() + ball[i].getRadius()*2)) ) {
+                clearInterval(theInterval);
+                drawFinalScore();
+              }
+            }
+          }
+
+
+        }
+
+        // BALL OBJECT
+        function Ball(newX, newY){
+          // Properties
+          var x = newX;
+          var y = newY;
+          var dx = 2;
+          var dy = 4;
+          var radius = 10;
+          var ballColor = "black";
+          // Method
+          this.draw = draw ;
+          function draw(){
+            graph.beginPath();
+            graph.save();
+            graph.fillStyle = ballColor;
+            graph.globalAlpha = "0.8";
+            graph.arc(x,y,radius,0, Math.PI*2);
+            graph.fill();
+            graph.closePath();
+            graph.restore();
+          }
+          this.setX = setX;
+          function setX(newX){
+            x = newX;
+          }
+          this.setY = setY;
+          function setY(newY){
+            y = newY;
+          }
+          this.getX = getX;
+          function getX() {
+            return x;
+          }
+          this.getY = getY;
+          function getY(){
+            return y;
+          }
+          this.getRadius = getRadius;
+          function getRadius(){
+            return radius;
+          }
+          this.move = move;
+          function move(){
+            // increase x, y
+            x += dx;
+            y += dy;
+            // Bounce on a right and left
+            if (x+dx+radius>WIDTH || x+dx-radius<0){
+              dx = -dx;
+            }
+            // Bounce if ball hits the top or hits the bottom
+            if (y+dx-radius<0 || y+dy+radius>HEIGHT){
+              dy = -dy;
+            }
+          }
+        }
+        // MAIN GAME
+        function playGame(){
+          graph.clearRect(0,0,WIDTH,HEIGHT);
+          // clear Canvas for each repeatation
+          player.draw();
+          for (var i=0; i<ball.length; i++)
+          {
+            ball[i].move();
+            ball[i].draw();
+          }
+          drawElapsedTime();
+        }
+        // SCORE
+        var score, startTime;
+        function drawElapsedTime(){
+          var elapsed = parseInt((new Date()- startTime)/1000 );
+          graph.save();
+          graph.beginPath();
+          graph.fillStyle = "red";
+          graph.font = "14px verdana";
+          graph.globalAlpha = "0.5";
+          graph.fillText(elapsed + " secs",WIDTH - 65, 20); // WIDTH - 65: X COORDINATE ; 20: Y COORDINATE ;
+          graph.closePath();
+          graph.restore();
+        }
+        function drawFinalScore(){
+          var elapsed = parseInt((new Date() - startTime)/1000);
+          graph.fillStyle = "red";
+          graph.font = "20px verdana";
+          graph.fillText("Your Score : "+ elapsed,100,30,200);
+        }
+        // KEYSTATE
+        function arrowKeyDown(e){
+          var stepSize = 10; // Increase stepSize
+          if (e.keyCode == 37)  // left
+        {
+           player.setX(player.getX() - player.getSpeed());
+           if (player.getX() < 0)
+           {
+            player.setX(0);
+           }
+        }
+       else if(e.keyCode == 38) // up
+        {
+           player.setY(player.getY() - player.getSpeed());
+           if (player.getY() < 0)
+           {
+            player.setY(0);
+           }
+        }
+       else if(e.keyCode == 39) // right
+        {
+           player.setX(player.getX() + player.getSpeed());
+          if ((player.getX() + player.getW()) > canvas.width)
+          {
+            player.setX(canvas.width - player.getW());
+          }
+        }
+       else if(e.keyCode == 40) // down
+        {
+           player.setY(player.getY() + player.getSpeed());
+          if ((player.getY() + player.getH()) > canvas.height)
+          {
+            player.setY(canvas.height - player.getH());
+          }
+        }
+
+      }
+
+         document.addEventListener('keydown',arrowKeyDown);
+    </script>
+  </head>
+  <body>
+      <canvas id="canvas" width="500" height="500"></canvas>
+  <script>
+     var canvas = document.getElementById("canvas");
+     // Set width and height for Canvas
+     WIDTH= 500;
+     HEIGHT= 500;
+     // keystate
+
+     // Assign a graphics context to the canvas
+     var graph = canvas.getContext("2d");
+     // function , call every 20 milliseconds
+     var startTime = new Date();
+     var theInterval = setInterval(playGame, 20);
+
+  </script>
+  <audio src="" autoplay loop>
+
+  </audio>
+  </body>
+</html>

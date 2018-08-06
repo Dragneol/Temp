@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="stylesheet" href="../css/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+<style>
+body{
+  display:flex;
+}
+canvas {
+  position: absolute;
+  margin: auto;
+  top:0;
+  bottom:0;
+  left:0;
+  right:0;
+  width:480px;
+  height: 270px;
+  border-top: 1px solid white;
+  border-bottom:1px solid white;
+}
+#rankTable{
+  position: fixed;
+  right:10px;
+}
+body, h1,h2,h3,h4,h5,h6{font-family: "Montserrat", sans-serif}
+.w3-row-padding img {margin-bottom: 12px}
+/* Set the width of the sidenav to 120px */
+.w3-sidenav {width: 120px;background: #222;}
+/* Add a left margin to the "page content" that matches the width of the sidenav (120px) */
+#main {margin-left: 120px}
+/* Remove margins from "page content" on small screens */
+@media only screen and (max-width: 600px) {#main {margin-left: 0}}
+</style>
+</head>
+
+
+
+<body onload="initTimeToStart()" class="w3-black">
+    <nav class="w3-sidenav w3-center w3-small w3-hide-small">
+      <!-- Avatar image in top left corner -->
+      <img src="../img/fcode.jpg" style="width:100%">
+      <a class="w3-padding-large w3-hover-grey" href="flappyBird.html">
+        <i class="fa fa-gamepad w3-xxlarge"></i>
+        <p>PLAY</p>
+      </a>
+      <a class="w3-padding-large w3-hover-black" href="../gameHome.html">
+
+          <i class="fa fa-home w3-xxlarge"></i>
+        <p>HOME</p>
+      </a>
+
+      <a class="w3-padding-large w3-hover-black" href="playGame.html">
+        <i class="fa fa-backward  w3-xxlarge"></i>
+        <p>BACK</p>
+      </a>
+    </nav>
+
+  <table id="rankTable" style="display:right;"></table>
+  <br>
+  <canvas onmousedown="accelerate(-0.7) onmouseup="accelerate(0.1)">ACCELERATE</button>
+
+  <p>Use the ACCELERATE button to stay in the air</p>
+  <p>How long can you stay alive?</p>
+
+
+<script src="https://www.gstatic.com/firebasejs/3.5.3/firebase.js"></script>
+<script>
+// firebase
+
+  var arrUser = [];
+
+
+
+  // Initialize Firebase
+
+  var config = {
+    apiKey: "AIzaSyCsmIpRTPd0f0n_t7Cm7OmuDBb-2i8gNeI",
+    authDomain: "fcode-web-game.firebaseapp.com",
+    databaseURL: "https://fcode-web-game.firebaseio.com",
+    storageBucket: "fcode-web-game.appspot.com",
+    messagingSenderId: "342458400856"
+  };
+  firebase.initializeApp(config);
+
+
+  var db = firebase.database();
+
+  function insertScore(p){
+
+    var ref = db.ref("FLAPPYSQUARE");
+    var user = localStorage.getItem('currentUser');
+      ref.push().set({
+            user: JSON.parse(user),
+            score: p
+      });
+
+      ref.once('value', function(snap){
+        snap.forEach(function(childSnap) {
+           //var childKey = childSnap.key();
+           var childData = childSnap.val();
+           arrUser.push(childData);
+         });
+         PrintTable(arrUser);
+      });
+  }
+  function PrintTable(arrUser){
+
+    arrUser.sort(function(a, b){return b.score - a.score});
+    var table = document.getElementById("rankTable");
+
+    for (i=0;i<arrUser.length;i++){
+       //console.log(arrUser[i]);
+        var row = table.insertRow(i);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        cell1.innerHTML = arrUser[i].score;
+        cell2.innerHTML = arrUser[i].user.PlayerName;
+        cell3.innerHTML = arrUser[i].user.SchoolName;
+    }
+
+  }
+
+var myGamePiece;
+var myObstacles = [];
+var myScore;
+var gameOver=0;
+var wait;
+var count = 0;
+var fontSize = 0;
+var ctx;
+
+function waitingPrint(){
+  count++;
+  fontSize += 50;
+  //console.log(count);
+  if (count == 4) clearInterval(wait);
+  else{
+    ctx.save();
+    ctx.beginPath();
+    ctx.font = fontSize.toString()+"px"+ " Verdana";
+    ctx.fillStyle = "red";
+    ctx.fillText(count, 150,150);
+
+    ctx.restore();
+    ctx.closePath();
+  }
+}
+
+function initTimeToStart(){
+
+  count = 0;
+  fontSize = 0;
+  myGameArea.init();
+  ctx = myGameArea.context;
+  wait = setInterval(waitingPrint, 1000);
+  setTimeout(startGame,4000);
+}
+function startGame() {
+
+   myGamePiece = new component(30, 30, "red", 10, 120);
+   myGamePiece.gravity = 0.05;
+    myScore = new component("30px", "Consolas", "white", 280, 40, "text");
+    myGameArea.start();
+}
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    init: function(){
+      this.canvas.width = 480;
+      this.canvas.height = 270;
+      this.context = this.canvas.getContext("2d");
+      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+      this.frameNo = 0;
+    },
+    start : function() {
+
+        this.interval = setInterval(updateGameArea, 20);
+
+        },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+}
+
+function component(width, height, color, x, y, type) {
+    this.type = type;
+    this.score = 0;
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;
+    this.x = x;
+    this.y = y;
+    this.gravity = 0;
+    this.gravitySpeed = 0;
+    this.update = function() {
+        ctx = myGameArea.context;
+        if (this.type == "text") {
+            ctx.font = this.width + " " + this.height;
+            ctx.fillStyle = color;
+            ctx.fillText(this.text, this.x, this.y);
+        } else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+    this.newPos = function() {
+        this.gravitySpeed += this.gravity;
+        this.x += this.speedX;
+        this.y += this.speedY + this.gravitySpeed;
+        this.hitBottom();
+    }
+    this.hitBottom = function() {
+        var rockbottom = myGameArea.canvas.height - this.height;
+        if (this.y > rockbottom) {
+            this.y = rockbottom;
+            this.gravitySpeed = 0;
+        }
+    }
+    this.crashWith = function(otherobj) {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true
+        if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+            crash = false;
+        }
+        return crash;
+    }
+    this.crashTopDown = function(){
+      var mybottom = this.y + (this.height);
+      var mytop = this.y;
+      //console.log(mytop);
+      var crash = false;
+      if (mybottom == 270 || mytop <=1) crash = true;
+      return crash;
+    }
+}
+
+function updateGameArea() {
+    var x, height, gap, minHeight, maxHeight, minGap, maxGap;
+    for (i = 0; i < myObstacles.length; i += 1) {
+        if (myGamePiece.crashTopDown()){
+          gameOver++;
+          //console.log(gameOver);
+          if (gameOver==1) insertScore(myGameArea.frameNo);
+          clearInterval(this.interval);
+          //
+          return;
+        }
+        if (myGamePiece.crashWith(myObstacles[i])) {
+            //Game Over
+            //console.log(myGameArea.frameNo);
+            //gameOver++;
+            //console.log(gameOver);
+            if (gameOver==1) insertScore(myGameArea.frameNo);
+            clearInterval(this.interval);
+            //
+            return;
+        }
+    }
+
+    myGameArea.clear();
+    myGameArea.frameNo += 1;
+    if (myGameArea.frameNo == 1 || everyinterval(150)) {
+        x = myGameArea.canvas.width;
+        minHeight = 20;
+        maxHeight = 200;
+        height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+        minGap = 50;
+        maxGap = 200;
+        gap = Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
+        myObstacles.push(new component(10, height, "green", x, 0));
+        myObstacles.push(new component(10, x - height - gap, "green", x, height + gap));
+    }
+    for (i = 0; i < myObstacles.length; i += 1) {
+        myObstacles[i].x += -1;
+        myObstacles[i].update();
+    }
+
+    myScore.text="SCORE: " + myGameArea.frameNo;
+    myScore.update();
+    myGamePiece.newPos();
+    myGamePiece.update();
+}
+var  keyState = [];
+keyState.length = 256;
+document.addEventListener('keydown', onKeyDown);
+document.addEventListener('keyup', onKeyUp);
+
+var keySpace = 32;
+
+function onKeyDown(e){
+  keyState[e.keyCode] = true;
+  if (e.keyCode == keySpace) accelerate(-0.6);
+
+}
+function onKeyUp(e){
+  keyState[e.keyCode] = false;
+  accelerate(0.2);
+}
+
+function everyinterval(n) {
+    if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+    return false;
+}
+
+function accelerate(n) {
+    myGamePiece.gravity = n;
+}
+</script>
+
+</body>
+</html>

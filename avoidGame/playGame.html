@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="../css/w3.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+	<title>Pong Game </title>
+	<style>
+		.canvasFrame{
+			width: 700px;
+			height: 600px;
+			position: absolute;
+			background-color:black;
+			margin: auto;
+			top:0;
+			bottom:0;
+			left:0;
+			right:0;
+			text-align:center;
+		}
+		.frame{
+			margin-top:200px;
+		}
+		.calink,.cap{
+			width: 400px;
+			font-size: 25px;
+			color:#fff;
+			text-decoration: none;
+			display:block;
+			margin: auto;
+			margin-top:18px;
+		}
+		.cap{
+			width:400px;
+		}
+		.calink:hover{
+			background-color:#444;
+		}
+		body, h1,h2,h3,h4,h5,h6{font-family: "Montserrat", sans-serif}
+		.w3-row-padding img {margin-bottom: 12px}
+		/* Set the width of the sidenav to 120px */
+		.w3-sidenav {width: 120px;background: #222;}
+		/* Add a left margin to the "page content" that matches the width of the sidenav (120px) */
+		#main {margin-left: 120px}
+		/* Remove margins from "page content" on small screens */
+	</style>
+</head>
+<body class="w3-black">
+	<nav class="w3-sidenav w3-center w3-small w3-hide-small">
+		<!-- Avatar image in top left corner -->
+		<img src="../img/fcode.jpg" style="width:100%">
+		<a class="w3-padding-large w3-hover-black" href="../gameHome.html">
+				<i class="fa fa-home w3-xxlarge"></i>
+			<p>HOME</p>
+		</a>
+		<a class="w3-padding-large w3-hover-black" href="../plappyBirdGame/playGame.html">
+			<i class="fa fa-gamepad  w3-xxlarge"></i>
+			<p>SQUARE</p>
+		</a>
+		<a class="w3-padding-large w3-hover-black" href="../pongGame/playGame.html">
+			<i class="fa fa-gamepad  w3-xxlarge"></i>
+			<p>PING PONG</p>
+		</a>
+		<a class="w3-padding-large w3-hover-black" href="../square/arrange.html">
+			<i class="fa fa-gamepad  w3-xxlarge"></i>
+			<p>ARRANGE</p>
+		</a>
+
+
+	</nav>
+	<div class="canvasFrame">
+		<div class="frame">
+		<p class="cap">---- Tránh Được Chết Liền ----</p>
+		<hr>
+		<a class="calink" href="avoid1.html">Play Now</a>
+		<p class="cap">Game will start after 3s</p>
+		<hr>
+		<p class="cap">Instruction: </p>
+		<p class="cap" style="width:500px;">Use { UP, DOWN, RIGHT, LEFT } button to Move the SQUARE</p>
+		</div>
+	</div>
+</body>
+</html>

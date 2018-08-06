@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>one player</title>
+  <link rel="stylesheet" href="../css/w3.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+	<style>
+		canvas{
+			position: absolute;
+			margin: auto;
+			top:0;
+			bottom:0;
+			left:0;
+			right:0;
+		}
+		#rankTable{
+			position: fixed;
+			right:0px;
+		}
+    body, h1,h2,h3,h4,h5,h6{font-family: "Montserrat", sans-serif}
+    .w3-row-padding img {margin-bottom: 12px}
+    /* Set the width of the sidenav to 120px */
+    .w3-sidenav {width: 120px;background: #222;}
+    /* Add a left margin to the "page content" that matches the width of the sidenav (120px) */
+    #main {margin-left: 120px}
+    /* Remove margins from "page content" on small screens */
+    @media only screen and (max-width: 600px) {#main {margin-left: 0}}
+
+	</style>
+	<script src="https://www.gstatic.com/firebasejs/3.5.3/firebase.js"></script>
+</head>
+<body class="w3-black">
+  <nav class="w3-sidenav w3-center w3-small w3-hide-small">
+    <!-- Avatar image in top left corner -->
+    <img src="../img/fcode.jpg" style="width:100%">
+    <button class="w3-padding-large w3-hover-grey" onclick="start()">
+    	<i class="fa fa-gamepad w3-xxlarge"></i>
+      <p>PLAY</p>
+    </button>
+		<a class="w3-padding-large w3-hover-black" href="2player.html">
+			<i class="fa  fa-american-sign-language-interpreting w3-xxlarge"></i>
+			<p>2 Player</p>
+		</a>
+    <a class="w3-padding-large w3-hover-black" href="../gameHome.html">
+
+			  <i class="fa fa-home w3-xxlarge"></i>
+      <p>HOME</p>
+    </a>
+
+    <a class="w3-padding-large w3-hover-black" href="playGame.html">
+      <i class="fa fa-backward  w3-xxlarge"></i>
+      <p>BACK</p>
+    </a>
+  </nav>
+<table id="rankTable">
+
+</table>
+
+<script>
+	// firebase
+
+		var arrUser = [];
+
+
+
+		// Initialize Firebase
+
+	  var config = {
+	    apiKey: "AIzaSyCsmIpRTPd0f0n_t7Cm7OmuDBb-2i8gNeI",
+	    authDomain: "fcode-web-game.firebaseapp.com",
+	    databaseURL: "https://fcode-web-game.firebaseio.com",
+	    storageBucket: "fcode-web-game.appspot.com",
+	    messagingSenderId: "342458400856"
+	  };
+	  firebase.initializeApp(config);
+
+
+		var db = firebase.database();
+
+		function insertScore(p){
+
+			var ref = db.ref("PINGPONG");
+			var user = localStorage.getItem('currentUser');
+				ref.push().set({
+							user: JSON.parse(user),
+							score: p
+				});
+
+				ref.once('value', function(snap){
+					snap.forEach(function(childSnap) {
+				     //var childKey = childSnap.key();
+				     var childData = childSnap.val();
+						 arrUser.push(childData);
+					 });
+					 PrintTable(arrUser);
+				});
+		}
+		function PrintTable(arrUser){
+
+			arrUser.sort(function(a, b){return b.score - a.score});
+			var table = document.getElementById("rankTable");
+
+			for (i=0;i<arrUser.length;i++){
+				 	//console.log(arrUser[i]);
+
+					var row = table.insertRow(i);
+					var cell1 = row.insertCell(0);
+					var cell2 = row.insertCell(1);
+					var cell3 = row.insertCell(2);
+					cell1.innerHTML = arrUser[i].score;
+					cell2.innerHTML = arrUser[i].user.PlayerName;
+					cell3.innerHTML = arrUser[i].user.SchoolName;
+			}
+
+		}
+
+
+
+		// Ranking
+
+
+
+
+
+	var WIDTH=700, HEIGHT=600, pi=Math.PI;
+	var UpArrow=38, DownArrow = 40;
+	var canvas, ctx, keystate;
+	var player, ai, ball;
+	var startTime;
+
+
+  canvas = document.createElement("canvas");
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+  ctx = canvas.getContext("2d");
+  document.body.appendChild(canvas);
+  keystate = {};
+  document.addEventListener("keydown",function(e){
+    keystate[e.keyCode] = true;
+  });
+
+  document.addEventListener("keyup", function(e){
+    delete keystate[e.keyCode];
+  });
+
+
+
+	player ={
+		x:null,
+		y:null,
+		width: 20,
+		height: 100,
+
+		update:function(){
+			if (keystate[UpArrow]) this.y -=5;
+			if (keystate[DownArrow]) this.y +=5;
+		},
+		draw: function() {
+			ctx.fillRect(this.x, this.y, this.width , this.height);
+		}
+	};
+	ai ={
+		x:null,
+		y:null,
+		width: 20,
+		height: 100,
+
+		update:function(){
+			var desty = ball.y - (this.height - ball.side)*0.5;
+			this.y += (desty - this.y) * 0.2;
+		},
+		draw: function() {
+			ctx.fillRect(this.x, this.y, this.width , this.height);
+		}
+	};
+
+	// declare : ball
+
+
+	ball ={
+		x:null,
+		y:null,
+		vel:null,
+		side: 20,
+		speed: 15,
+
+
+		update:function(){
+			this.x += this.vel.x;
+			this.y += this.vel.y;
+
+			if (this.x + 10<0) {
+				//alert("Game Over");
+				drawFinalScore();
+				runFlag = 1;
+				loop = null;
+				//console.log("Game Over");
+
+
+			}
+			if (0 > this.y || this.y+this.side > HEIGHT){
+				var offset = this.vel.y < 0 ? 0 - this.y : HEIGHT - (this.y + this.side);
+				this.y+= 2*offset;
+				this.vel.y*=-1;
+			}
+			var AABBIntersect = function(ax, ay, aw, ah, bx, by, bw, bh){
+				return ax < bx+bw && ay < by+bh && bx < ax+aw  && by < ay+ah;
+			};
+
+			var pdle = this.vel.x < 0 ? player : ai;
+			if (AABBIntersect(pdle.x, pdle.y, pdle.width, pdle.height, this.x, this.y, this.side, this.side)
+			) {
+				this.x = pdle===player ? player.x+player.width : ai.x - this.side;
+				var n = (this.y+this.side-pdle.y)/(pdle.height+this.side);
+				var phi = 0.25*pi*(2*n-1);
+				this.vel.x = (pdle === player ? 1 : -1)*this.speed*Math.cos(phi);
+				this.vel.y = this.speed*Math.sin(phi);
+			}
+		},
+		draw: function() {
+			ctx.fillRect(this.x, this.y, this.side , this.side);
+		}
+	};
+	function drawFinalScore(){
+		// you loose
+
+		var elapsed = parseInt((new Date() - startTime)/1000);
+		insertScore(elapsed);
+		ctx.save();
+		ctx.beginPath();
+		ctx.font =" 50px Verdana";
+		ctx.fillStyle = "red";
+		ctx.fillText("Just " + elapsed +" secs", 200,300);
+
+		ctx.closePath();
+
+		ctx.restore();
+
+	}
+	function drawElapsedScore(){
+		var elapsed = parseInt((new Date() - startTime)/1000);
+		ctx.save();
+		//console.log(elapsed);
+		ctx.beginPath();
+		ctx.font = "20px Verdana";
+		ctx.fillStyle = "yellow";
+		ctx.fillText(elapsed + " secs", WIDTH - 75,20);
+
+		ctx.restore();
+		ctx.closePath();
+	}
+
+	function init(){
+		player.x = player.width;
+		player.y = (HEIGHT - player.height)/2;
+
+		ai.x = WIDTH - (player.width + ai.width);
+		ai.y = (HEIGHT - ai.height)/2;
+
+		ball.x = (WIDTH - ball.side)/2;
+		ball.y = (HEIGHT - ball.side)/2;
+
+		ball.vel = {
+			x: ball.speed,
+			y: 3,
+		}
+		startTime = new Date();
+	}
+
+	function update() {
+		ball.update();
+		player.update();
+		ai.update();
+
+	}
+
+	function draw() {
+		ctx.fillRect(0,0, WIDTH, HEIGHT);
+ 		ctx.save();
+ 		ctx.fillStyle = "#fff";
+
+
+		ball.draw();
+		player.draw();
+		ai.draw();
+
+ 		var w = 4;
+ 		var x = (WIDTH - w)*0.5;
+ 		var y = 0;
+ 		var step = HEIGHT/20;
+ 		while (y < HEIGHT){
+ 			ctx.fillRect(x, y+step*0.25, w, step*0.5);
+ 			y += step;
+ 		}
+
+		ctx.restore();
+	}
+
+
+
+
+	var runFlag = 0;
+	function main(){
+
+		init();
+
+		var loop = function() {
+			update();
+			draw();
+			drawElapsedScore();
+			if (runFlag==0)  window.requestAnimationFrame(loop, canvas);
+			else window.cancelAnimationFrame(loop, canvas);
+
+		};
+		window.requestAnimationFrame(loop, canvas);
+
+	}
+	var wait;
+  var count;
+  var fontSize;
+
+
+
+	// Print second before Running game
+	function waitingPrint(){
+    count++;
+    fontSize+=50;
+    if (count==4)  clearInterval(wait);
+
+
+
+			ctx.save();
+			ctx.beginPath();
+			ctx.font = fontSize.toString()+"px"+ " Verdana";
+			ctx.fillStyle = "red";
+			ctx.fillText(count, 310,300);
+
+			ctx.restore();
+			ctx.closePath();
+
+
+
+
+  }
+	draw();
+	function start(){
+		count = 0;
+		fontSize = 0;
+		//drawElapsedScore();
+		wait = setInterval(waitingPrint,1000);
+		setTimeout(main,4000);
+		runFlag = 0;
+	}
+
+
+</script>
+</body>
+</html>
